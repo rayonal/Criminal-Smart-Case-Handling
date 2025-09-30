@@ -15,16 +15,16 @@ export const generateCaseGuide = async (caseData: CaseData): Promise<CaseGuide> 
   const { caseType, casePosition, description } = caseData;
 
   const prompt = `
-    Anda adalah asisten hukum AI yang ahli dalam hukum acara di Indonesia.
-    Tugas Anda adalah membuat panduan langkah demi langkah yang detail, praktis, dan strategis untuk seorang Advokat.
+    Anda adalah asisten hukum AI yang ahli dalam hukum acara pidana di Indonesia.
+    Tugas Anda adalah membuat panduan langkah demi langkah yang detail, praktis, dan strategis untuk seorang Advokat yang menangani perkara pidana.
 
     Informasi Kasus:
     - Jenis Perkara: ${caseType}
     - Posisi Klien: ${casePosition}
     - Deskripsi Singkat Kasus: ${description}
 
-    Berdasarkan informasi di atas, buatkan panduan beracara yang komprehensif.
-    Uraikan setiap tahapan proses beracara secara kronologis, mulai dari persiapan awal hingga putusan akhir.
+    Berdasarkan informasi di atas, buatkan panduan beracara pidana yang komprehensif.
+    Uraikan setiap tahapan proses beracara secara kronologis, mulai dari tingkat penyidikan, penuntutan, pemeriksaan di pengadilan, hingga upaya hukum.
     Untuk setiap tahapan, sertakan:
     1.  Penjelasan detail tentang apa yang harus dilakukan.
     2.  Daftar dokumen penting yang harus disiapkan.

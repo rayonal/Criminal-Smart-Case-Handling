@@ -1,196 +1,170 @@
+// Fix: Implement the main App component to orchestrate the application.
 import React, { useState, useEffect } from 'react';
-import { Document, Packer, Paragraph, TextRun, HeadingLevel, AlignmentType } from 'docx';
 import CaseInputForm from './components/CaseInputForm';
 import CaseGuideDisplay from './components/CaseGuideDisplay';
 import LoadingSpinner from './components/LoadingSpinner';
+import HistoryList from './components/HistoryList';
+import LawFirmIdentityForm from './components/LawFirmIdentityForm';
 import LegalIcon from './components/icons/LegalIcon';
 import { generateCaseGuide } from './services/geminiService';
-import type { CaseData, CaseGuide } from './types';
-import HistoryList from './components/HistoryList';
+import { createDocxFromGuide } from './services/docxService';
+import { CaseData, CaseGuide, LawFirmIdentity } from './types';
 
-const LOCAL_STORAGE_KEY = 'smart-case-handling-guides';
+const LOCAL_STORAGE_KEY_HISTORY = 'smart-case-handling-history';
 
-const createDocxFromGuide = (guide: CaseGuide): Promise<Blob> => {
-    const doc = new Document({
-        sections: [{
-            properties: {},
-            children: [
-                new Paragraph({
-                    children: [new TextRun({ text: guide.judulPanduan, bold: true, size: 32 })],
-                    heading: HeadingLevel.TITLE,
-                    alignment: AlignmentType.CENTER,
-                }),
-                new Paragraph({ text: "", spacing: { after: 400 } }), // Spacer
-                ...guide.tahapan.flatMap((step) => [
-                    new Paragraph({
-                        text: step.tahap, // FIXED: Removed manual "TAHAP X:" prefix
-                        heading: HeadingLevel.HEADING_1,
-                        spacing: { before: 400, after: 200 },
-                    }),
-                    new Paragraph({
-                        text: "Deskripsi",
-                        heading: HeadingLevel.HEADING_2,
-                        spacing: { after: 100 },
-                    }),
-                    new Paragraph({
-                        children: [new TextRun(step.deskripsi)],
-                        spacing: { after: 200 },
-                    }),
-                    new Paragraph({
-                        text: "Dokumen Penting",
-                        heading: HeadingLevel.HEADING_2,
-                        spacing: { after: 100 },
-                    }),
-                    ...step.dokumenPenting.map(docItem => new Paragraph({
-                        text: docItem,
-                        bullet: { level: 0 },
-                    })),
-                    new Paragraph({ text: "", spacing: { after: 200 } }), // Spacer
-                    new Paragraph({
-                        text: "Tips Strategis",
-                        heading: HeadingLevel.HEADING_2,
-                        spacing: { after: 100 },
-                    }),
-                    new Paragraph({
-                        children: [new TextRun(step.tips)],
-                    }),
-                ]),
-            ],
-        }],
-    });
-
-    return Packer.toBlob(doc);
-};
-
-
-const App: React.FC = () => {
-  const [guide, setGuide] = useState<CaseGuide | null>(null);
+function App() {
   const [isLoading, setIsLoading] = useState(false);
+  const [guide, setGuide] = useState<CaseGuide | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [history, setHistory] = useState<CaseGuide[]>([]);
+  const [identity, setIdentity] = useState<LawFirmIdentity>({
+    firmName: '',
+    address: '',
+    phone: '',
+    email: '',
+  });
 
   useEffect(() => {
     try {
-      const storedGuides = localStorage.getItem(LOCAL_STORAGE_KEY);
-      if (storedGuides) {
-        setHistory(JSON.parse(storedGuides));
+      const storedHistory = localStorage.getItem(LOCAL_STORAGE_KEY_HISTORY);
+      if (storedHistory) {
+        setHistory(JSON.parse(storedHistory));
       }
     } catch (e) {
-      console.error("Failed to load or parse history from local storage", e);
-      setHistory([]);
+      console.error("Gagal memuat riwayat dari local storage", e);
     }
   }, []);
 
-
-  const handleGenerateGuide = async (data: CaseData) => {
-    setIsLoading(true);
-    setError(null);
-    setGuide(null);
+  useEffect(() => {
     try {
-      const result = await generateCaseGuide(data);
-      setGuide(result);
-      
-      const newHistory = [result, ...history.filter(g => g.judulPanduan !== result.judulPanduan)];
-      setHistory(newHistory);
-      localStorage.setItem(LOCAL_STORAGE_KEY, JSON.stringify(newHistory));
+      localStorage.setItem(LOCAL_STORAGE_KEY_HISTORY, JSON.stringify(history));
+    } catch (e) {
+      console.error("Gagal menyimpan riwayat ke local storage", e);
+    }
+  }, [history]);
 
-    } catch (err: any) {
-      setError(err.message || 'Terjadi kesalahan yang tidak diketahui.');
+  const handleFormSubmit = async (data: CaseData) => {
+    setIsLoading(true);
+    setGuide(null);
+    setError(null);
+    try {
+      const generatedGuide = await generateCaseGuide(data);
+      setGuide(generatedGuide);
+      // Add to history, prevent duplicates, and limit to 10 items
+      setHistory(prevHistory => [generatedGuide, ...prevHistory.filter(h => h.judulPanduan !== generatedGuide.judulPanduan)].slice(0, 10));
+    } catch (err) {
+      if (err instanceof Error) {
+        setError(err.message);
+      } else {
+        setError("Terjadi kesalahan yang tidak diketahui.");
+      }
     } finally {
       setIsLoading(false);
     }
   };
 
-  const handleLoadHistoryItem = (guideToLoad: CaseGuide) => {
+  const handleDownload = async (guideToDownload: CaseGuide) => {
+    try {
+      const blob = await createDocxFromGuide(guideToDownload, identity);
+      const url = URL.createObjectURL(blob);
+      const link = document.createElement('a');
+      link.href = url;
+      const fileName = `${guideToDownload.judulPanduan.replace(/[^a-z0-9]/gi, '_').toLowerCase()}.docx`;
+      link.setAttribute('download', fileName);
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      URL.revokeObjectURL(url);
+    } catch (error) {
+      console.error("Gagal membuat atau mengunduh file DOCX:", error);
+      setError("Gagal membuat file dokumen. Silakan coba lagi.");
+    }
+  };
+
+  const handleLoadFromHistory = (guideToLoad: CaseGuide) => {
     setGuide(guideToLoad);
     setError(null);
     window.scrollTo({ top: 0, behavior: 'smooth' });
   };
-
-  const handleDeleteHistoryItem = (indexToDelete: number) => {
-    const guideToDelete = history[indexToDelete];
-    const newHistory = history.filter((_, index) => index !== indexToDelete);
-    setHistory(newHistory);
-    localStorage.setItem(LOCAL_STORAGE_KEY, JSON.stringify(newHistory));
-
-    if (guide && guide.judulPanduan === guideToDelete.judulPanduan) {
-        setGuide(null);
-    }
+  
+  const handleDeleteFromHistory = (index: number) => {
+    setHistory(prevHistory => prevHistory.filter((_, i) => i !== index));
   };
   
-  const handleDownloadGuide = async (guideToDownload: CaseGuide) => {
-    try {
-        const blob = await createDocxFromGuide(guideToDownload);
-        const filename = `${guideToDownload.judulPanduan.replace(/[^a-z0-9]/gi, '_').toLowerCase()}.docx`;
-        
-        const element = document.createElement("a");
-        element.href = URL.createObjectURL(blob);
-        element.download = filename;
-        document.body.appendChild(element);
-        element.click();
-        document.body.removeChild(element);
-
-    } catch (error) {
-        console.error("Error creating DOCX file:", error);
-        alert("Gagal membuat file .docx. Silakan coba lagi.");
-    }
+  const handleReset = () => {
+    setGuide(null);
+    setError(null);
   };
 
-
   return (
-    <div className="min-h-screen bg-slate-900 text-white font-sans overflow-hidden">
-      <div className="absolute inset-0 -z-10 h-full w-full bg-slate-900 bg-[radial-gradient(#1e293b_1px,transparent_1px)] [background-size:16px_16px]"></div>
-      
-      <div className="container mx-auto px-4 py-12 md:py-20 max-w-4xl">
-        <header className="text-center mb-12">
-            <div className="flex justify-center items-center mb-6">
-              <LegalIcon className="w-16 h-16 text-sky-400 drop-shadow-[0_0_15px_rgba(56,189,248,0.4)]"/>
-            </div>
-          <h1 className="text-4xl md:text-5xl font-extrabold tracking-tight bg-clip-text text-transparent bg-gradient-to-r from-sky-400 to-cyan-300 pb-2">
-            Smart Case Handling
-          </h1>
-          <p className="mt-4 text-lg text-slate-300 max-w-2xl mx-auto">
-            Panduan Beracara Berbasis AI untuk Advokat di Indonesia. Masukkan detail kasus Anda untuk mendapatkan strategi langkah demi langkah.
-          </p>
+    <div className="bg-slate-900 text-slate-200 min-h-screen font-sans">
+      <main className="max-w-4xl mx-auto px-4 py-8 md:py-12">
+        <header className="text-center mb-10">
+           <div className="flex justify-center items-center gap-4 mb-3">
+             <LegalIcon className="w-10 h-10 text-sky-400"/>
+             <h1 className="text-4xl md:text-5xl font-extrabold tracking-tight bg-clip-text text-transparent bg-gradient-to-r from-sky-400 to-cyan-300">
+                Smart Criminal Case Handling
+             </h1>
+           </div>
+           <p className="text-slate-400 max-w-2xl mx-auto">
+            Asisten AI untuk membantu Advokat menyusun panduan beracara pidana di Indonesia secara cepat dan strategis.
+           </p>
         </header>
 
-        <main>
-          <div className="bg-slate-800/50 border border-slate-700 rounded-2xl p-6 md:p-8 shadow-2xl shadow-slate-950/50 backdrop-blur-sm relative overflow-hidden">
-            <div className="absolute top-0 left-0 w-full h-full bg-gradient-to-br from-sky-900/20 via-transparent to-transparent -z-10"></div>
-            <CaseInputForm onSubmit={handleGenerateGuide} isLoading={isLoading} />
-          </div>
-
-          <div className="mt-12">
-            {isLoading && <LoadingSpinner />}
-            {error && (
-              <div className="bg-red-900/50 border border-red-700 text-red-300 p-4 rounded-lg text-center animate-fade-in">
-                <p className="font-bold">Gagal Membuat Panduan</p>
-                <p className="text-sm">{error}</p>
-              </div>
-            )}
-            {guide && !isLoading && <CaseGuideDisplay guide={guide} onDownload={() => handleDownloadGuide(guide)} />}
-          </div>
-
-          {history.length > 0 && (
-            <div className="mt-20">
-              <h2 className="text-2xl font-bold text-center text-slate-300 mb-8">Riwayat Panduan</h2>
-               <HistoryList
-                history={history}
-                onLoad={handleLoadHistoryItem}
-                onDelete={handleDeleteHistoryItem}
-                onDownload={handleDownloadGuide}
-            />
+        {!guide && !isLoading && (
+            <div className="animate-fade-in">
+                <LawFirmIdentityForm identity={identity} setIdentity={setIdentity} isLoading={isLoading} />
+                <div className="bg-slate-800/50 border border-slate-700 rounded-2xl shadow-xl shadow-slate-950/50 backdrop-blur-sm p-6 md:p-8">
+                     <CaseInputForm onSubmit={handleFormSubmit} isLoading={isLoading} />
+                </div>
             </div>
-          )}
-        </main>
+        )}
+
+        {isLoading && <LoadingSpinner />}
         
-        <footer className="text-center mt-20 text-slate-500 text-sm">
-            <p>Powered by Google Gemini. © {new Date().getFullYear()} Smart Case Handling.</p>
-            <p className="mt-1">Dibuat untuk tujuan demonstrasi dan tidak menggantikan nasihat hukum profesional.</p>
-        </footer>
-      </div>
+        {error && (
+            <div className="mt-8 text-center bg-red-900/50 border border-red-700 text-red-300 p-4 rounded-lg animate-fade-in">
+                <p className="font-semibold">Terjadi Kesalahan</p>
+                <p>{error}</p>
+                 <button onClick={handleReset} className="mt-4 px-4 py-2 bg-red-600 hover:bg-red-500 text-white font-semibold rounded-lg transition-colors">
+                    Coba Lagi
+                </button>
+            </div>
+        )}
+
+        {guide && !isLoading && (
+            <div className="animate-fade-in">
+                <CaseGuideDisplay guide={guide} onDownload={() => handleDownload(guide)} />
+                <div className="text-center mt-12">
+                     <button 
+                        onClick={handleReset} 
+                        className="py-3 px-6 border border-slate-600 rounded-lg shadow-lg text-base font-medium text-slate-300 bg-slate-800 hover:bg-slate-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-offset-slate-900 focus:ring-sky-500 transition-all duration-300"
+                     >
+                        Buat Panduan Baru
+                    </button>
+                </div>
+            </div>
+        )}
+        
+        {history.length > 0 && !guide && !isLoading && (
+             <div className="mt-16">
+                <h2 className="text-2xl font-bold text-slate-300 mb-6 text-center">Riwayat Panduan</h2>
+                <HistoryList 
+                    history={history} 
+                    onLoad={handleLoadFromHistory}
+                    onDelete={handleDeleteFromHistory}
+                    onDownload={handleDownload}
+                />
+            </div>
+        )}
+      </main>
+       <footer className="text-center py-6 px-4">
+        <p className="text-sm text-slate-500">
+          Powered by Google Gemini. Dibuat sebagai alat bantu dan bukan pengganti nasihat hukum profesional.
+        </p>
+      </footer>
     </div>
   );
-};
+}
 
 export default App;

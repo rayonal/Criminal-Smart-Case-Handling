@@ -1,15 +1,12 @@
-
+// Fix: Define the types used throughout the application.
 export enum CaseType {
-  PERDATA = "Perdata",
   PIDANA = "Pidana",
-  PTUN = "Tata Usaha Negara (PTUN)",
-  AGAMA = "Agama (Perceraian, Waris, dll)",
-  PHI = "Hubungan Industrial (PHI)"
 }
 
 export enum CasePosition {
-  PENGGUGAT = "Penggugat / Pemohon",
-  TERGUGAT = "Tergugat / Termohon"
+  TERSANGKA_TERDAKWA = "Tersangka/Terdakwa",
+  SAKSI = "Saksi",
+  KORBAN = "Korban/Pelapor",
 }
 
 export interface CaseData {
@@ -28,4 +25,11 @@ export interface GuideStep {
 export interface CaseGuide {
   judulPanduan: string;
   tahapan: GuideStep[];
+}
+
+export interface LawFirmIdentity {
+  firmName: string;
+  address: string;
+  phone: string;
+  email: string;
 }
