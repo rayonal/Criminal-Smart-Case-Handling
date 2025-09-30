@@ -1,5 +1,5 @@
 import React from 'react';
-import { CaseType, CasePosition, CaseData, ClientIdentity, Gender } from '../types';
+import { CaseType, CasePosition, CaseData, ClientIdentity, Gender, Agama } from '../types';
 
 interface CaseInputFormProps {
   caseData: CaseData;
@@ -135,17 +135,36 @@ const CaseInputForm: React.FC<CaseInputFormProps> = ({ caseData, onUpdate, isLoa
                 </div>
             </div>
           </div>
+           <div>
+            <label htmlFor="agama" className="block text-sm font-medium text-slate-300 mb-2">Agama</label>
+            <div className="relative">
+                <select name="agama" id="agama" value={caseData.clientIdentity?.agama || Agama.ISLAM} onChange={handleClientIdentityChange} disabled={isLoading} className={selectStyle}>
+                {Object.values(Agama).map(agama => (
+                    <option key={agama} value={agama}>{agama}</option>
+                ))}
+                </select>
+                <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center px-3 text-slate-400">
+                    <svg className="h-5 w-5" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
+                        <path fillRule="evenodd" d="M10 3a.75.75 0 01.53.22l3.5 3.5a.75.75 0 01-1.06 1.06L10 4.81 6.53 8.28a.75.75 0 01-1.06-1.06l3.5-3.5A.75.75 0 0110 3zm-3.72 9.28a.75.75 0 011.06 0L10 15.19l3.47-3.47a.75.75 0 111.06 1.06l-4 4a.75.75 0 01-1.06 0l-4-4a.75.75 0 010-1.06z" clipRule="evenodd" />
+                    </svg>
+                </div>
+            </div>
+          </div>
           <div>
             <label htmlFor="kewarganegaraan" className="block text-sm font-medium text-slate-300 mb-2">Kewarganegaraan</label>
             <input type="text" name="kewarganegaraan" id="kewarganegaraan" value={caseData.clientIdentity?.kewarganegaraan || 'Indonesia'} onChange={handleClientIdentityChange} disabled={isLoading} className={inputStyle} />
           </div>
-          <div className="md:col-span-2">
+          <div>
             <label htmlFor="pekerjaan" className="block text-sm font-medium text-slate-300 mb-2">Pekerjaan</label>
             <input type="text" name="pekerjaan" id="pekerjaan" value={caseData.clientIdentity?.pekerjaan || ''} onChange={handleClientIdentityChange} disabled={isLoading} className={inputStyle} />
           </div>
           <div className="md:col-span-2">
             <label htmlFor="alamat" className="block text-sm font-medium text-slate-300 mb-2">Alamat</label>
             <textarea name="alamat" id="alamat" rows={2} value={caseData.clientIdentity?.alamat || ''} onChange={handleClientIdentityChange} disabled={isLoading} className={`${inputStyle} resize-y min-h-[60px]`} placeholder="Alamat sesuai KTP"></textarea>
+          </div>
+          <div className="md:col-span-2">
+            <label htmlFor="pendidikan" className="block text-sm font-medium text-slate-300 mb-2">Pendidikan</label>
+            <input type="text" name="pendidikan" id="pendidikan" value={caseData.clientIdentity?.pendidikan || ''} onChange={handleClientIdentityChange} disabled={isLoading} className={inputStyle} placeholder="Pendidikan Terakhir"/>
           </div>
         </div>
       </fieldset>

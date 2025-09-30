@@ -51,9 +51,11 @@ const ReviewStep: React.FC<ReviewStepProps> = ({ identity, caseData }) => {
           <DataRow label="NIK" value={clientIdentity?.nik} />
           <DataRow label="Tempat, Tgl Lahir" value={tglLahir} />
           <DataRow label="Jenis Kelamin" value={clientIdentity?.jenisKelamin} />
+          <DataRow label="Agama" value={clientIdentity?.agama} />
           <DataRow label="Kewarganegaraan" value={clientIdentity?.kewarganegaraan} />
           <DataRow label="Pekerjaan" value={clientIdentity?.pekerjaan} />
           <DataRow label="Alamat" value={clientIdentity?.alamat} />
+          <DataRow label="Pendidikan" value={clientIdentity?.pendidikan} />
           <DataRow label="Deskripsi Kasus" value={caseData.description} />
         </dl>
       </div>

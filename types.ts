@@ -14,15 +14,26 @@ export enum Gender {
   PEREMPUAN = "Perempuan",
 }
 
+export enum Agama {
+  ISLAM = "Islam",
+  KRISTEN_PROTESTAN = "Kristen Protestan",
+  KRISTEN_KHATOLIK = "Kristen Khatolik",
+  HINDU = "Hindu",
+  BUDHA = "Budha",
+  KONGHUCU = "Konghucu",
+}
+
 export interface ClientIdentity {
   nama: string;
   nik: string;
   tempatLahir: string;
   tanggalLahir: string;
   jenisKelamin: Gender;
+  agama: Agama;
   kewarganegaraan: string;
   pekerjaan: string;
   alamat: string;
+  pendidikan: string;
 }
 
 export interface CaseData {
