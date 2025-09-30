@@ -13,7 +13,7 @@ const CheckIcon = () => (
 
 const WizardStepper: React.FC<WizardStepperProps> = ({ steps, currentStep }) => {
   return (
-    <nav aria-label="Progress">
+    <nav aria-label="Progress" className="flex justify-center">
       <ol role="list" className="flex items-center">
         {steps.map((step, stepIdx) => (
           <li key={step} className={`relative ${stepIdx !== steps.length - 1 ? 'pr-8 sm:pr-20' : ''}`}>
