@@ -55,11 +55,7 @@ const GuideImplementationWizard: React.FC<GuideImplementationWizardProps> = ({
   const totalSteps = guide.tahapan.length;
   const currentStepData = guide.tahapan[currentStepIndex];
   const progressPercentage = ((currentStepIndex + 1) / totalSteps) * 100;
-  const fileInputRef = useRef<HTMLInputElement>(null);
-
-  const handleUploadClick = () => {
-    fileInputRef.current?.click();
-  };
+  const fileInputRefs = useRef<Record<string, HTMLInputElement | null>>({});
 
   const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>, docName: string) => {
     const file = event.target.files?.[0];
@@ -67,8 +63,8 @@ const GuideImplementationWizard: React.FC<GuideImplementationWizardProps> = ({
       onFileUpload(guide.judulPanduan, currentStepData.tahap, docName, file);
     }
     // Reset file input to allow re-uploading the same file
-    if(fileInputRef.current) {
-        fileInputRef.current.value = "";
+    if(fileInputRefs.current[docName]) {
+        fileInputRefs.current[docName]!.value = "";
     }
   };
 
@@ -116,13 +112,13 @@ const GuideImplementationWizard: React.FC<GuideImplementationWizardProps> = ({
                       <>
                         <input
                           type="file"
-                          ref={fileInputRef}
+                          ref={el => fileInputRefs.current[doc] = el}
                           onChange={(e) => handleFileChange(e, doc)}
                           accept=".pdf"
                           className="hidden"
                         />
                         <button 
-                          onClick={handleUploadClick}
+                          onClick={() => fileInputRefs.current[doc]?.click()}
                           className="flex items-center gap-2 text-sm font-medium text-sky-300 bg-sky-900/50 hover:bg-sky-900/80 border border-sky-800/70 rounded-md px-3 py-1 transition-colors duration-200 flex-shrink-0"
                         >
                           <UploadIcon className="w-4 h-4" />
