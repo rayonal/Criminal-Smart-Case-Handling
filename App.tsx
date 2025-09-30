@@ -6,6 +6,7 @@ import LoadingSpinner from './components/LoadingSpinner';
 import HistoryList from './components/HistoryList';
 import LawFirmIdentityForm from './components/LawFirmIdentityForm';
 import LegalIcon from './components/icons/LegalIcon';
+import ClientCaseIcon from './components/icons/ClientCaseIcon';
 import { generateCaseGuide } from './services/geminiService';
 import { createDocxFromGuide } from './services/docxService';
 import { CaseData, CaseGuide, LawFirmIdentity } from './types';
@@ -69,7 +70,16 @@ function App() {
       const url = URL.createObjectURL(blob);
       const link = document.createElement('a');
       link.href = url;
-      const fileName = `${guideToDownload.judulPanduan.replace(/[^a-z0-9]/gi, '_').toLowerCase()}.docx`;
+
+      const clientName = guideToDownload.clientName;
+      const baseName = clientName
+        ? `Panduan Pendampingan Pidana - ${clientName}`
+        : guideToDownload.judulPanduan;
+
+      // Sanitize filename to remove invalid characters
+      const sanitizedBaseName = baseName.replace(/[/\\?%*:|"<>]/g, '_');
+      const fileName = `${sanitizedBaseName}.docx`;
+      
       link.setAttribute('download', fileName);
       document.body.appendChild(link);
       link.click();
@@ -115,6 +125,10 @@ function App() {
             <div className="animate-fade-in">
                 <LawFirmIdentityForm identity={identity} setIdentity={setIdentity} isLoading={isLoading} />
                 <div className="bg-slate-800/50 border border-slate-700 rounded-2xl shadow-xl shadow-slate-950/50 backdrop-blur-sm p-6 md:p-8">
+                     <div className="flex items-center justify-center gap-3 mb-6">
+                        <ClientCaseIcon className="w-6 h-6 text-cyan-400"/>
+                        <h2 className="text-xl font-semibold text-slate-200">Informasi Kasus Klien</h2>
+                     </div>
                      <CaseInputForm onSubmit={handleFormSubmit} isLoading={isLoading} />
                 </div>
             </div>

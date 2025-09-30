@@ -9,10 +9,28 @@ export enum CasePosition {
   KORBAN = "Korban/Pelapor",
 }
 
+export enum Gender {
+  LAKI_LAKI = "Laki-laki",
+  PEREMPUAN = "Perempuan",
+}
+
+export interface ClientIdentity {
+  nama: string;
+  nik: string;
+  tempatLahir: string;
+  tanggalLahir: string;
+  jenisKelamin: Gender;
+  kewarganegaraan: string;
+  pekerjaan: string;
+  alamat: string;
+}
+
 export interface CaseData {
   caseType: CaseType;
   casePosition: CasePosition;
   description: string;
+  clientId?: string;
+  clientIdentity: Partial<ClientIdentity>;
 }
 
 export interface GuideStep {
@@ -25,6 +43,7 @@ export interface GuideStep {
 export interface CaseGuide {
   judulPanduan: string;
   tahapan: GuideStep[];
+  clientName?: string;
 }
 
 export interface LawFirmIdentity {

@@ -13,18 +13,25 @@ const LOCAL_STORAGE_KEY_IDENTITY = 'smart-case-handling-identity';
 const LawFirmIdentityForm: React.FC<LawFirmIdentityFormProps> = ({ identity, setIdentity, isLoading }) => {
   const [isCollapsed, setIsCollapsed] = useState(true);
 
-  // Muat dari local storage pada render awal
+  // Muat dari local storage atau set default pada render awal
   useEffect(() => {
     try {
       const storedIdentity = localStorage.getItem(LOCAL_STORAGE_KEY_IDENTITY);
       if (storedIdentity) {
         const parsedIdentity = JSON.parse(storedIdentity);
         setIdentity(parsedIdentity);
-        // Jika ada data yang tersimpan, biarkan form tertutup.
-        // Jika tidak, buka untuk meminta pengguna mengisinya.
         setIsCollapsed(!!parsedIdentity.firmName); 
       } else {
-        setIsCollapsed(false); // Buka jika tidak ada data
+        // Jika tidak ada di storage, set dan simpan nilai default
+        const defaultIdentity: LawFirmIdentity = {
+            firmName: 'Iustitia Caelestis Law Firm',
+            address: 'Jl. Terusan Taruna II No. 2, Kelurahan Pasir Endah, Kecamatan Ujungberung, Kota Bandung',
+            phone: '022-63740615',
+            email: 'iustitia.caelestis@gmail.com',
+        };
+        setIdentity(defaultIdentity);
+        localStorage.setItem(LOCAL_STORAGE_KEY_IDENTITY, JSON.stringify(defaultIdentity));
+        setIsCollapsed(false); // Buka form untuk pengguna pertama kali
       }
     } catch (e) {
       console.error("Gagal memuat atau mengurai identitas dari local storage", e);
