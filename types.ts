@@ -26,11 +26,11 @@ export interface ClientIdentity {
 }
 
 export interface CaseData {
-  caseType: CaseType;
-  casePosition: CasePosition;
-  description: string;
+  caseType?: CaseType;
+  casePosition?: CasePosition;
+  description?: string;
   clientId?: string;
-  clientIdentity: Partial<ClientIdentity>;
+  clientIdentity?: Partial<ClientIdentity>;
 }
 
 export interface GuideStep {
@@ -52,3 +52,13 @@ export interface LawFirmIdentity {
   phone: string;
   email: string;
 }
+
+export interface UploadedFile {
+  name: string;
+  type: string;
+  size: number;
+  data: string; // base64 encoded file content
+}
+
+// Maps: Guide Title -> Step Title -> Document Name -> UploadedFile
+export type UploadedFileMap = Record<string, Record<string, Record<string, UploadedFile>>>;

@@ -4,6 +4,7 @@ import { CaseGuide, GuideStep } from '../types';
 interface CaseGuideDisplayProps {
   guide: CaseGuide;
   onDownload: () => void;
+  onImplement: () => void;
 }
 
 const DocumentIcon: React.FC<{ className?: string }> = ({ className }) => (
@@ -60,23 +61,31 @@ const GuideStepCard: React.FC<{ step: GuideStep, index: number, isLast: boolean 
     );
 };
 
-const CaseGuideDisplay: React.FC<CaseGuideDisplayProps> = ({ guide, onDownload }) => {
+const CaseGuideDisplay: React.FC<CaseGuideDisplayProps> = ({ guide, onDownload, onImplement }) => {
   return (
     <div className="mt-12 animate-fade-in">
-      <div className="flex justify-center items-center gap-4 mb-4">
-        <h2 className="text-3xl lg:text-4xl font-extrabold text-center tracking-tight bg-clip-text text-transparent bg-gradient-to-r from-sky-300 to-cyan-200">
+      <div className="text-center mb-8">
+        <h2 className="text-3xl lg:text-4xl font-extrabold tracking-tight bg-clip-text text-transparent bg-gradient-to-r from-sky-300 to-cyan-200">
           {guide.judulPanduan}
         </h2>
-        <button
-          onClick={onDownload}
-          title="Unduh Panduan"
-          aria-label="Unduh Panduan sebagai file .txt"
-          className="p-2 text-slate-400 hover:text-sky-400 hover:bg-sky-900/50 rounded-full transition-colors duration-200"
-        >
-          <DownloadIcon className="w-6 h-6" />
-        </button>
+        <p className="text-slate-400 mt-2 max-w-2xl mx-auto">Panduan langkah demi langkah yang dihasilkan oleh AI untuk kasus Anda.</p>
+        <div className="mt-6 flex justify-center items-center gap-4">
+             <button
+                onClick={onImplement}
+                className="py-2.5 px-6 rounded-lg text-base font-semibold text-white bg-gradient-to-r from-sky-600 to-cyan-500 hover:from-sky-500 hover:to-cyan-400 transition-all duration-300 shadow-md hover:shadow-lg"
+              >
+                Terapkan Panduan
+              </button>
+            <button
+              onClick={onDownload}
+              title="Unduh Panduan"
+              aria-label="Unduh Panduan sebagai file .docx"
+              className="p-2 text-slate-400 hover:text-sky-400 hover:bg-sky-900/50 rounded-full transition-colors duration-200"
+            >
+              <DownloadIcon className="w-6 h-6" />
+            </button>
+        </div>
       </div>
-      <p className="text-center text-slate-400 mb-8 max-w-2xl mx-auto">Panduan langkah demi langkah yang dihasilkan oleh AI untuk kasus Anda.</p>
       
       <ol>
         {guide.tahapan.map((step, index) => (
